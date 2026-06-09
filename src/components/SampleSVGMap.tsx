@@ -1,5 +1,5 @@
 import React from 'react';
-import { SVGMap } from './SVGMap';
+import { InteractiveSVGMap } from './InteractiveSVGMap';
 import type { Location } from '@/types';
 
 const CAMPUS_SVG = `
@@ -29,7 +29,7 @@ const LOCATIONS: Location[] = [
 
 export const SampleSVGMap: React.FC = () => {
   return (
-    <SVGMap
+    <InteractiveSVGMap
       svgString={CAMPUS_SVG}
       bounds={{
         north: 15.5023,
@@ -38,6 +38,7 @@ export const SampleSVGMap: React.FC = () => {
         west: -88.0245,
       }}
       locations={LOCATIONS}
+      onLocationPress={(loc) => console.log('Location pressed:', loc.name)}
     />
   );
 };

@@ -1,19 +1,19 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SampleSVGMap } from '@/components/SampleSVGMap';
 
 export default function App() {
   return (
-    <View style={styles.container}>
+    <GestureHandlerRootView style={styles.container}>
       <SampleSVGMap />
       <StatusBar style="auto" />
-    </View>
+    </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
 });

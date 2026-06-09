@@ -70,7 +70,7 @@ Define entidades del mapa y permite interacción con elementos SVG específicos.
 ## ✅ Estado Global del Proyecto
 
 - [x] Fase 1: SVG Layer
-- [ ] Fase 2: Interaction Layer
+- [x] Fase 2: Interaction Layer
 - [ ] Fase 3: Projection Layer
 - [ ] Fase 4: Marker Layer
 - [ ] Fase 5: Location Layer
