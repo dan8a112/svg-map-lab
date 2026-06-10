@@ -15,7 +15,7 @@ Establece la estructura del proyecto y renderiza mapas SVG básicos.
 - **Archivo de detalles:** `docs/PHASE-01-svg-layer.md`
 
 ### **Fase 2: Interaction Layer**
-Implementa zoom (pinch), pan (drag) y gestos básicos sobre el SVG.
+Implementa zoom (pinch), pan (drag) y gestos básicos sobre el SVG. Implementación actual usa `react-native-zoom-toolkit` para manejar gestos resumables y momentum.
 - **Duración estimada:** 2-3 días
 - **Archivo de detalles:** `docs/PHASE-02-interaction-layer.md`
 
@@ -70,9 +70,9 @@ Define entidades del mapa y permite interacción con elementos SVG específicos.
 ## ✅ Estado Global del Proyecto
 
 - [x] Fase 1: SVG Layer
-- [x] Fase 2: Interaction Layer
+- [x] Fase 2: Interaction Layer (implementada con `react-native-zoom-toolkit`)
 - [ ] Fase 3: Projection Layer
 - [ ] Fase 4: Marker Layer
 - [ ] Fase 5: Location Layer
 
-**Próximo paso:** Abre `docs/PHASE-01-svg-layer.md` para comenzar.
+**Próximo paso:** Abre `docs/PHASE-03-projection-layer.md` para comenzar con la conversión de coordenadas.

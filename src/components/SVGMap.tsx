@@ -1,30 +1,17 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { SvgXml } from 'react-native-svg';
-import type { SVGMapProps } from '@/types';
+import React from "react";
+import { View, ViewStyle } from "react-native";
+import { SvgXml } from "react-native-svg";
+import type { SVGMapProps } from "@/types";
 
-export const SVGMap: React.FC<SVGMapProps> = ({
-  svgString,
-  bounds,
-  locations = [],
-  markers = [],
-  onLocationPress,
-  onMarkerPress,
-}) => {
-  return (
-    <View style={styles.container}>
-      <SvgXml
-        xml={svgString}
-        width="100%"
-        height="100%"
-      />
-    </View>
-  );
+type SVGMapComponentProps = Pick<SVGMapProps, "svgString"> & {
+  style?: ViewStyle;
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-});
+export const SVGMap: React.FC<SVGMapComponentProps> = ({
+  svgString,
+  style,
+}) => (
+  <View style={style}>
+    <SvgXml xml={svgString} width="100%" height="100%" />
+  </View>
+);

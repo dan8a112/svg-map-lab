@@ -1,6 +1,10 @@
-import React from 'react';
-import { InteractiveSVGMap } from './InteractiveSVGMap';
-import type { Location } from '@/types';
+import React from "react";
+import { useWindowDimensions } from "react-native";
+import { ResumableZoom } from "react-native-zoom-toolkit";
+import { SVGMap } from "./SVGMap";
+
+const SVG_WIDTH = 800;
+const SVG_HEIGHT = 600;
 
 const CAMPUS_SVG = `
 <svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
@@ -20,25 +24,43 @@ const CAMPUS_SVG = `
 </svg>
 `;
 
-const LOCATIONS: Location[] = [
-  { id: 'admin', name: 'AdministraciÃ³n', svgElementId: 'admin' },
-  { id: 'library', name: 'Biblioteca', svgElementId: 'library' },
-  { id: 'cafeteria', name: 'CafeterÃ­a', svgElementId: 'cafeteria' },
-  { id: 'plaza', name: 'Plaza Central', svgElementId: 'plaza' },
-];
+/**
+ * LIMITACIÓN CONOCIDA - Calidad SVG en Zoom
+ * 
+ * Actual: SvgXml renderiza a textura fija (contentWidth × contentHeight).
+ * Al hacer zoom >1x, ResumableZoom escala esa textura ? pixelación visible.
+ * 
+ * Solución futura: Migrar a @shopify/react-native-skia + SkiaSvg
+ * - Renderizado vectorial GPU a resolución arbitraria
+ * - Calidad perfecta a cualquier nivel de zoom
+ * - Requiere reescribir SVGMap.tsx usando <Canvas> + <SkiaSvg>
+ * 
+ * Referencia: https://github.com/Shopify/react-native-skia
+ */
 
 export const SampleSVGMap: React.FC = () => {
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+
+  const initialScale = screenHeight / SVG_HEIGHT;
+  const contentWidth = SVG_WIDTH * initialScale;
+  const contentHeight = screenHeight;
+
   return (
-    <InteractiveSVGMap
-      svgString={CAMPUS_SVG}
-      bounds={{
-        north: 15.5023,
-        south: 15.4998,
-        east: -88.0201,
-        west: -88.0245,
-      }}
-      locations={LOCATIONS}
-      onLocationPress={(loc) => console.log('Location pressed:', loc.name)}
-    />
+    <ResumableZoom
+      minScale={1}
+      maxScale={5}
+      panEnabled={true}
+      pinchEnabled={true}
+      tapsEnabled={true}
+      extendGestures={true}
+      decay={true}
+      panMode="clamp"
+      style={{ width: screenWidth, height: screenHeight }}
+    >
+      <SVGMap
+        svgString={CAMPUS_SVG}
+        style={{ width: contentWidth, height: contentHeight }}
+      />
+    </ResumableZoom>
   );
 };

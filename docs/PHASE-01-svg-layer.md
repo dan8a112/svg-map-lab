@@ -73,107 +73,44 @@ export interface SVGMapProps {
 ---
 
 ### 1.3 Crear Componente SVGMap Básico
-- [ ] Crear archivo `src/components/SVGMap.tsx`
-- [ ] Implementar renderización básica del SVG
-- [ ] Usar `react-native-svg` para renderizar
-- [ ] Propiedades: `svgString`, `bounds`, `locations`, `markers`
-- [ ] Sin interactividad aún (solo render)
+- [x] Crear archivo `src/components/SVGMap.tsx`
+- [x] Implementar renderización básica del SVG usando `SvgXml`
+- [x] Aceptar `style` prop y envolver `SvgXml` en un `View` para que sea medible (onLayout)
+- [x] Propiedades: `svgString`, `bounds`, `locations`, `markers`
 
 **Archivo:** `src/components/SVGMap.tsx`
 
 ```typescript
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import Svg from 'react-native-svg';
+import { View, ViewStyle } from 'react-native';
+import { SvgXml } from 'react-native-svg';
 import type { SVGMapProps } from '@/types';
 
-export const SVGMap: React.FC<SVGMapProps> = ({
-  svgString,
-  bounds,
-  locations = [],
-  markers = [],
-  onLocationPress,
-  onMarkerPress,
-}) => {
-  return (
-    <View style={styles.container}>
-      <Svg
-        width="100%"
-        height="100%"
-        viewBox="0 0 800 600"
-      >
-        {/* SVG content will be rendered here */}
-      </Svg>
-    </View>
-  );
+type SVGMapComponentProps = Pick<SVGMapProps, 'svgString'> & {
+  style?: ViewStyle;
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-});
+export const SVGMap: React.FC<SVGMapComponentProps> = ({ svgString, style }) => (
+  <View style={style}>
+    {/* SvgXml se ajusta al tamaño del View padre */}
+    <SvgXml xml={svgString} width="100%" height="100%" />
+  </View>
+);
 ```
 
 ---
 
 ### 1.4 Crear Componente de Ejemplo
-- [ ] Crear archivo `src/components/SampleSVGMap.tsx`
-- [ ] Crear un SVG de ejemplo (campus simple)
-- [ ] Renderizar usando el componente `SVGMap`
-- [ ] Esto será usado en `App.tsx` para demostración
+- [x] Crear archivo `src/components/SampleSVGMap.tsx`
+- [x] Crear un SVG de ejemplo (campus simple)
+- [x] Renderizar usando `ResumableZoom` + `SVGMap` (Interaction Layer provee la interactividad)
+- [x] Esto será usado en `App.tsx` para demostración
 
-**Archivo:** `src/components/SampleSVGMap.tsx`
+**Archivo de referencia:** `src/components/SampleSVGMap.tsx` (implementación final con `ResumableZoom`)
 
 ```typescript
-import React from 'react';
-import { SVGMap } from './SVGMap';
-import type { Location } from '@/types';
-
-const CAMPUS_SVG = `
-<svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
-  <rect width="800" height="600" fill="#f0f0f0"/>
-  
-  <!-- Edificio de Administración -->
-  <rect id="admin" x="50" y="50" width="200" height="150" fill="#e3f2fd" stroke="#1976d2" stroke-width="2"/>
-  <text x="150" y="135" text-anchor="middle" font-size="16" fill="#000">Admin</text>
-  
-  <!-- Biblioteca -->
-  <rect id="library" x="350" y="50" width="200" height="150" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="2"/>
-  <text x="450" y="135" text-anchor="middle" font-size="16" fill="#000">Library</text>
-  
-  <!-- Cafetería -->
-  <rect id="cafeteria" x="650" y="50" width="100" height="150" fill="#fff3e0" stroke="#f57c00" stroke-width="2"/>
-  <text x="700" y="135" text-anchor="middle" font-size="12" fill="#000">Cafe</text>
-  
-  <!-- Patio Central -->
-  <circle id="plaza" cx="400" cy="400" r="100" fill="#e8f5e9" stroke="#388e3c" stroke-width="2"/>
-  <text x="400" y="410" text-anchor="middle" font-size="16" fill="#000">Plaza</text>
-</svg>
-`;
-
-const LOCATIONS: Location[] = [
-  { id: 'admin', name: 'Administración', svgElementId: 'admin' },
-  { id: 'library', name: 'Biblioteca', svgElementId: 'library' },
-  { id: 'cafeteria', name: 'Cafetería', svgElementId: 'cafeteria' },
-  { id: 'plaza', name: 'Plaza Central', svgElementId: 'plaza' },
-];
-
-export const SampleSVGMap: React.FC = () => {
-  return (
-    <SVGMap
-      svgString={CAMPUS_SVG}
-      bounds={{
-        north: 15.5023,
-        south: 15.4998,
-        east: -88.0201,
-        west: -88.0245,
-      }}
-      locations={LOCATIONS}
-    />
-  );
-};
+// El sample actual usa ResumableZoom en lugar de solo SVGMap
+// para proveer zoom/pan y permitir que el child sea medido correctamente.
 ```
 
 ---

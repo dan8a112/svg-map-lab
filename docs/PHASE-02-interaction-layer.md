@@ -1,288 +1,102 @@
-# Fase 2: Interaction Layer - Zoom, Pan y Gestos
+# Fase 2: Interaction Layer — Implementación final (react-native-zoom-toolkit)
 
-**Estado:** ✅ Completada  
-**Duración estimada:** 2-3 días  
-**Dependencias:** Fase 1 (SVG Layer) ✅
+**Estado:** ✅ Completada
+**Duración estimada (original):** 2-3 días
+**Dependencias clave:** `react-native-zoom-toolkit@5.1.0`, `react-native-worklets@0.8.3`, `react-native-svg` (render)
 
 ---
 
 ## 📌 Objetivo
 
-Agregar interactividad al mapa SVG: zoom (pinch), pan (drag) y detección de toques en elementos.
+Proveer interacción sobre el mapa SVG: zoom (pinch), pan (drag), double-tap y detección mínima de toques. La implementación actual utiliza `react-native-zoom-toolkit` para gestionar gestos y transformaciones de manera fiable y resumable.
 
 ---
 
-## 🎯 Tareas
+## 🎯 Tareas Realizadas
 
-### 2.1 Instalar React Native Gesture Handler
-- [ ] Instalar `react-native-gesture-handler`
-- [ ] Instalar `react-native-reanimated`
-- [ ] Verificar que Expo está configurado para usar estas librerías
+### 2.1 Instalar `react-native-zoom-toolkit`
+- [x] `npm install react-native-zoom-toolkit@5.1.0 react-native-worklets@0.8.3`
+- [x] Verificar que `react-native-gesture-handler` y `react-native-reanimated` están disponibles (son dependencias del ecosistema)
 
-**Comando:**
+**Comandos:**
 ```bash
-npm install react-native-gesture-handler react-native-reanimated
-```
-
-**Referencia:** AGENTS.md menciona `vercel-react-native-skills` que incluye reglas para animaciones y gestos.
-
----
-
-### 2.2 Crear Hook `useMapTransform`
-- [ ] Crear archivo `src/hooks/useMapTransform.ts`
-- [ ] Manejar estado de zoom (scale)
-- [ ] Manejar estado de pan (translateX, translateY)
-- [ ] Exportar funciones para actualizar ambos valores
-
-**Archivo:** `src/hooks/useMapTransform.ts`
-
-```typescript
-import { useSharedValue } from 'react-native-reanimated';
-
-export const useMapTransform = (initialScale: number = 1) => {
-  const scale = useSharedValue(initialScale);
-  const translateX = useSharedValue(0);
-  const translateY = useSharedValue(0);
-
-  const reset = () => {
-    scale.value = initialScale;
-    translateX.value = 0;
-    translateY.value = 0;
-  };
-
-  return {
-    scale,
-    translateX,
-    translateY,
-    reset,
-  };
-};
+npm install react-native-zoom-toolkit@5.1.0 react-native-worklets@0.8.3
 ```
 
 ---
 
-### 2.3 Crear Componente `InteractiveSVGMap`
-- [ ] Crear archivo `src/components/InteractiveSVGMap.tsx`
-- [ ] Envolver SVG en Animated.View
-- [ ] Implementar PinchGestureHandler para zoom
-- [ ] Implementar PanGestureHandler para pan
-- [ ] Agregar límites mínimos y máximos de zoom
+### 2.2 Implementar `SVGMap.tsx` medible
+- [x] `src/components/SVGMap.tsx` ahora acepta una `style` prop con dimensiones y envuelve `SvgXml` en un `View` medible.
 
-**Archivo:** `src/components/InteractiveSVGMap.tsx`
+Motivo: `ResumableZoom` necesita medir el child vía `onLayout` para calcular bounds y transformaciones.
 
-```typescript
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useAnimatedGestureHandler,
-  withSpring,
-} from 'react-native-reanimated';
-import {
-  PinchGestureHandler,
-  PanGestureHandler,
-  GestureHandlerRootView,
-} from 'react-native-gesture-handler';
-import Svg from 'react-native-svg';
-import { useMapTransform } from '@/hooks/useMapTransform';
-import type { SVGMapProps } from '@/types';
+---
 
-const MIN_SCALE = 1;
-const MAX_SCALE = 5;
+### 2.3 Implementar `SampleSVGMap.tsx` usando `ResumableZoom`
+- [x] `src/components/SampleSVGMap.tsx` reescrito para usar `ResumableZoom`
+- [x] Comportamiento configurado:
+  - `minScale={1}`, `maxScale={5}`
+  - `panEnabled={true}`, `pinchEnabled={true}`, `tapsEnabled={true}`
+  - `extendGestures={true}` (permite pan cuando child > root)
+  - `decay={true}` (momentum: deslizado con decaimiento al soltar)
+  - `panMode="clamp"` (sin whitespace)
+  - Inicial: el SVG llena el alto de la pantalla; el ancho resultante > ancho pantalla y es accesible por pan
 
-export const InteractiveSVGMap: React.FC<SVGMapProps> = ({
-  svgString,
-  bounds,
-  locations = [],
-  markers = [],
-  onLocationPress,
-  onMarkerPress,
-}) => {
-  const { scale, translateX, translateY, reset } = useMapTransform();
-
-  const pinchHandler = useAnimatedGestureHandler({
-    onActive: (event) => {
-      const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, event.scale));
-      scale.value = newScale;
-    },
-    onEnd: () => {
-      if (scale.value < MIN_SCALE) {
-        scale.value = withSpring(MIN_SCALE);
-      } else if (scale.value > MAX_SCALE) {
-        scale.value = withSpring(MAX_SCALE);
-      }
-    },
-  });
-
-  const panHandler = useAnimatedGestureHandler({
-    onActive: (event) => {
-      translateX.value = event.translationX;
-      translateY.value = event.translationY;
-    },
-  });
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { scale: scale.value },
-      { translateX: translateX.value },
-      { translateY: translateY.value },
-    ],
-  }));
-
-  return (
-    <GestureHandlerRootView style={styles.container}>
-      <View style={styles.mapContainer}>
-        <PinchGestureHandler onGestureEvent={pinchHandler}>
-          <Animated.View style={[styles.content, animatedStyle]}>
-            <PanGestureHandler onGestureEvent={panHandler}>
-              <Svg
-                width="100%"
-                height="100%"
-                viewBox="0 0 800 600"
-              >
-                {/* SVG content will be rendered here */}
-              </Svg>
-            </PanGestureHandler>
-          </Animated.View>
-        </PinchGestureHandler>
-      </View>
-    </GestureHandlerRootView>
-  );
-};
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  mapContainer: {
-    flex: 1,
-    overflow: 'hidden',
-  },
-  content: {
-    flex: 1,
-  },
-});
+Código de referencia (resumen):
+```tsx
+<ResumableZoom
+  minScale={1}
+  maxScale={5}
+  panEnabled
+  pinchEnabled
+  tapsEnabled
+  extendGestures
+  decay
+  panMode="clamp"
+  style={{ width: screenWidth, height: screenHeight }}
+>
+  <SVGMap svgString={CAMPUS_SVG} style={{ width: contentWidth, height: contentHeight }} />
+</ResumableZoom>
 ```
 
 ---
 
-### 2.4 Crear Hook `useTapDetection`
-- [ ] Crear archivo `src/hooks/useTapDetection.ts`
-- [ ] Detectar toques en elementos SVG específicos
-- [ ] Llamar callbacks `onLocationPress` o `onMarkerPress`
-
-**Archivo:** `src/hooks/useTapDetection.ts`
-
-```typescript
-import { useCallback } from 'react';
-import type { Location, Marker } from '@/types';
-
-export const useTapDetection = (
-  locations?: Location[],
-  markers?: Marker[],
-  onLocationPress?: (location: Location) => void,
-  onMarkerPress?: (marker: Marker) => void,
-) => {
-  const handleSVGPress = useCallback(
-    (event: any) => {
-      const target = event.nativeEvent.target;
-      
-      // Buscar en locations
-      if (locations && onLocationPress) {
-        const location = locations.find(
-          (loc) => loc.svgElementId === target.id
-        );
-        if (location) {
-          onLocationPress(location);
-        }
-      }
-
-      // Buscar en markers
-      if (markers && onMarkerPress) {
-        const marker = markers.find(
-          (m) => m.id === target.id
-        );
-        if (marker) {
-          onMarkerPress(marker);
-        }
-      }
-    },
-    [locations, markers, onLocationPress, onMarkerPress]
-  );
-
-  return { handleSVGPress };
-};
-```
+### 2.4 Limpiar `metro.config.js`
+- [x] Se eliminó el `resolveRequest` personalizado y ahora `metro.config.js` usa `getDefaultConfig(__dirname)` para evitar workarounds innecesarios.
 
 ---
 
-### 2.5 Actualizar Componente de Ejemplo
-- [ ] Actualizar `src/components/SampleSVGMap.tsx`
-- [ ] Cambiar de `SVGMap` a `InteractiveSVGMap`
-- [ ] Agregar console.log o toast en `onLocationPress` y `onMarkerPress`
-
-**Referencia:** Verifica que funciona con `npm start`
+### 2.5 Notas y Limitaciones
+- [x] Documentado en código: la renderización actual con `SvgXml` produce una textura a la resolución del child. Al aplicar `scale > 1`, el resultado es un escalado de esa textura y puede mostrar pixelación.
+- [x] Ruta de mejora futura: migración a `@shopify/react-native-skia` + `SkiaSvg` para renderizado vectorial GPU y calidad perfecta a cualquier zoom.
 
 ---
 
-### 2.6 Actualizar App.tsx
-- [ ] Asegurar que renderiza correctamente
-- [ ] Probar pinch (zoom) en el simulador
-- [ ] Probar drag (pan) en el simulador
+## ✅ Checklist de Validación (actual)
+
+- [x] `react-native-zoom-toolkit` instalado
+- [x] `src/components/SVGMap.tsx` es medible (envuelto en View)
+- [x] `src/components/SampleSVGMap.tsx` usa `ResumableZoom` y permite:
+  - Pan horizontal (cuando el child es más ancho que la pantalla)
+  - Pinch zoom 1x–5x
+  - Double-tap
+  - Momentum (deslizamiento) al soltar
+- [x] `metro.config.js` limpio
 
 ---
 
-## ✅ Checklist de Validación
+## 🧪 Pruebas Manuales (actualizadas)
 
-Antes de pasar a Fase 3, verifica:
-
-- [ ] `react-native-gesture-handler` está instalado
-- [ ] `react-native-reanimated` está instalado
-- [ ] `src/hooks/useMapTransform.ts` existe y funciona
-- [ ] `src/components/InteractiveSVGMap.tsx` renderiza sin errores
-- [ ] `src/hooks/useTapDetection.ts` detecta toques (verificar en console)
-- [ ] Ejecutar `npm start` muestra la app sin errores
-- [ ] Zoom (pinch) funciona en el simulador
-- [ ] Pan (drag) funciona en el simulador
-- [ ] Se pueden tocar elementos SVG (verificar con console.log)
-
----
-
-## 🧪 Pruebas Manuales
-
-1. **Ejecutar la app:**
-   ```bash
-   npm start
-   # Elige tu plataforma
-   ```
-
-2. **Probar Zoom:**
-   - En simulador iOS: Cmd+Option para pinch
-   - En simulador Android: Ctrl para pinch
-   - El mapa debe crecer y achicarse suavemente
-   - El zoom debe limitar entre 1x y 5x
-
-3. **Probar Pan:**
-   - Arrastra el mapa con un dedo
-   - El mapa debe moverse en la dirección del arrastre
-   - Debe funcionr con zoom aplicado
-
-4. **Probar Tap Detection:**
-   - Abre la consola (npm start mostró URL de debug)
-   - Toca elementos del SVG
-   - Verifica console.log o toast
-
----
-
-## 📝 Notas Importantes
-
-- **Reanimated 3:** La sintaxis es con Shared Values (v3.0+)
-- **GestureHandler:** Envuelve con `GestureHandlerRootView`
-- **Performance:** Usa Animated values para evitar re-renders
-- **Límites:** MIN_SCALE = 1, MAX_SCALE = 5 (ajusta si es necesario)
+1. Inicia la app: `npm start` y abre en Expo Go o emulador
+2. Probar Pan:
+   - Arrastra horizontalmente y suelta: debería continuar deslizando con decaimiento
+3. Probar Zoom:
+   - Pinch para acercar/alejar (1x–5x)
+   - Double-tap para zoom toggle
+4. Verificar que no aparece whitespace en los bordes y que el contenido fuera de pantalla es accesible mediante pan
 
 ---
 
 ## 🔗 Próximo Paso
 
-Una vez completada esta fase, ve a `docs/PHASE-03-projection-layer.md` para agregar conversión de coordenadas GPS.
+Continuar con `docs/PHASE-03-projection-layer.md` para implementar la conversión GPS ↔ SVG.
