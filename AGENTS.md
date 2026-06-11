@@ -45,6 +45,14 @@ The repo has `vercel-react-native-skills` installed. When building components, a
 - No jest, test runners, or test files configured
 - If adding tests, coordinate setup with app requirements
 
+## Git & Commit Conventions
+
+- Agrupar cambios relacionados en commits separados
+- Usar prefijos convencionales: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, etc.
+- La descripción del commit debe ir en español
+- Antes de commitear, revisar `git status`, `git diff` y `git log --oneline -5`
+- No commitear secrets ni `node_modules/`
+
 ## Git & History
 
 - Three commits total; main work is SVG map implementation
